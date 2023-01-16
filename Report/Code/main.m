@@ -42,6 +42,7 @@ data = [norm, data(:,w)];    % Add last column back to now normalized data
 % 4. Shuffle the data
 h = height(data);                   % Get number of rows
 shuffle = data(randperm(h),:);      % Shuffle rows
+classes =  shuffle(:,w);            % Store targets seperately
 data = shuffle(:,1:w-1);            % Remove last column again
 
 % -- DATA PREPRATION COMPLETE -- %
@@ -50,6 +51,7 @@ data = shuffle(:,1:w-1);            % Remove last column again
 
 % -- PCA -- %
 
+warning('off', 'stats:pca:ColRankDefX');
 dm = data{:,:};                             % table to matrix
 [~, score, latent, ~, explained] = pca(dm); % PCA on matrix
 
@@ -61,11 +63,39 @@ xlabel("PCA Components"); ylabel("Variance");
 figure(2);
 plot(cumsum(explained), 'k-');
 title("Cumulative Sum of Variance");
-xlabel("PCA Components"); ylabel("Percentage of Variancecd do");
+xlabel("PCA Components"); ylabel("Percentage of Variance");
 
 figure(3);
-scatter(score(:,1), score(:,2),'bo');
+grp = table2array(classes)                       % table to array targets
+idxnormal = find(contains(grp, 'normal'));       % find all normal
+idxportsweep = find(contains(grp, 'portsweep')); % find all portsweep 
+idxneptune = find(contains(grp, 'neptune'));     % find all neptune
+
+% Plot normal
+x = score(idxnormal, 1);
+y = score(idxnormal, 2);
+plot(x,y, 'bo'); hold on;
+
+% Plot portsweep
+x = score(idxportsweep, 1);
+y = score(idxportsweep, 2);
+plot(x,y, 'ro'); hold on;
+
+% Plot neptune
+x = score(idxneptune, 1);
+y = score(idxneptune, 2);
+plot(x,y, 'go');
+
 title("Principal Component Analysis (PCA)");
 xlabel("PC1"); ylabel("PC2");
+legend('normal', 'portsweep', 'neptune');
+
+reduced = score(:,1:2);            % Reduce dimensionality from 33 to 2
+
+% -- PCA COMPLETE -- %
 
 
+
+% -- TESTING AND TRAINING SPLIT -- %
+
+net = patternnet(10)
